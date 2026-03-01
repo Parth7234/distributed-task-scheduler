@@ -1,35 +1,41 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
-import heapq
+from sqlalchemy.orm import Session
 
-# Initialize the FastAPI app
+# Import new database configuration and models
+import database
+import models
+
+# tell SQLAlchemy to create the tables in PostgreSQL if they don't exist yet
+models.Base.metadata.create_all(bind=database.engine)
+
 app = FastAPI(title="Distributed Task Scheduler API")
 
-# Our in-memory queue from Phase 1
-task_queue = []
-task_counter = 1
-
-# This defines the exact data structure we expect the user to send us
+# Define the exact data structure expected from the user
 class TaskRequest(BaseModel):
     priority: int
     description: str
 
-# Endpoint 1: Add a task to the queue
+# Endpoint 1: Add a task to the database
 @app.post("/tasks")
-def create_task(request: TaskRequest):
-    global task_counter
+def create_task(request: TaskRequest, db: Session = Depends(database.get_db)):
+    # 1. Create a new Python object representing the row
+    new_task = models.Task(
+        priority=request.priority,
+        description=request.description,
+        status="PENDING"
+    )
     
-    # Push to our heap using a tuple: (priority, task_id, description, status)
-    # heapq automatically sorts tuples by their first element (priority)
-    heapq.heappush(task_queue, (request.priority, task_counter, request.description, "PENDING"))
+    # 2. Add it to the session and commit it to the database
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task) # This grabs the auto-generated ID from PostgreSQL
     
-    assigned_id = task_counter
-    task_counter += 1
-    
-    return {"message": "Task added successfully!", "task_id": assigned_id, "priority": request.priority}
+    return {"message": "Task added successfully!", "task": new_task}
 
-# Endpoint 2: View the current queue
+# Endpoint 2: View the current queue from the database
 @app.get("/tasks")
-def view_queue():
-    # Returns the raw queue so we can see what's inside
-    return {"current_queue_size": len(task_queue), "tasks": task_queue}
+def view_queue(db: Session = Depends(database.get_db)):
+    # 3. Query the database for all tasks, ordered by priority (lowest number first)
+    tasks = db.query(models.Task).order_by(models.Task.priority.asc()).all()
+    return {"current_queue_size": len(tasks), "tasks": tasks}
