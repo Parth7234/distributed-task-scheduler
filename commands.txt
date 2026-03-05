@@ -1,4 +1,4 @@
-#launches the uvicorn server on http://127.0.0.1:8000
+#launches the uvicorn server on http://127.0.0.1:8000/docs
 uvicorn api:app --reload
 
 #change virtual environment to venv
@@ -6,3 +6,11 @@ source venv/bin/activate
 
 #update requirements.txt
 pip freeze > requirements.txt
+
+#clear local database 
+1. clear redis queue
+redis-cli FLUSHALL
+
+2.clear PostgreSQL Database 
+psql -d task_scheduler -c "TRUNCATE TABLE tasks RESTART IDENTITY;"
+
