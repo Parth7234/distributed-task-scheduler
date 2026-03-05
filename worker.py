@@ -1,4 +1,5 @@
 import time
+import datetime
 import redis
 from database import SessionLocal
 import models
@@ -34,6 +35,10 @@ def start_worker():
             if task:
                 # mark task as RUNNING so the API knows we are working on it
                 task.status = "RUNNING"
+                
+                # record the exact UTC time the task started
+                task.started_at = datetime.datetime.utcnow() 
+                
                 db.commit()
                 
                 print(f"[Worker] Executing: '{task.description}'...")
