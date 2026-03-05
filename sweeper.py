@@ -16,7 +16,7 @@ def run_sweeper():
         db = SessionLocal()
         try:
             # calculate the cutoff time: Right now MINUS 60 seconds
-            cutoff_time = datetime.datetime.utcnow() - datetime.timedelta(seconds=TIMEOUT_SECONDS)
+            cutoff_time = datetime.datetime.now(datetime.UTC) - datetime.timedelta(seconds=TIMEOUT_SECONDS)
             
             # query PostgreSQL for tasks that are RUNNING but started before the cutoff time
             ghost_tasks = db.query(models.Task).filter(

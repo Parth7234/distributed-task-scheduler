@@ -37,7 +37,7 @@ def start_worker():
                 task.status = "RUNNING"
                 
                 # record the exact UTC time the task started
-                task.started_at = datetime.datetime.utcnow() 
+                task.started_at = datetime.datetime.now(datetime.UTC)
                 
                 db.commit()
                 
