@@ -45,7 +45,7 @@ graph TD
     class Worker,Sweeper processing;
 ```
 
-## ✨ Key Engineering Features
+## Key Features
 
 **Asynchronous Processing:**  
 Offloads heavy computational tasks from the main API thread to isolated background workers, ensuring immediate HTTP response times.
@@ -58,7 +58,7 @@ Implements a dedicated background "Sweeper" process to detect orphaned or crashe
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Web Framework:** FastAPI, Uvicorn  
 - **Database / Persistence:** PostgreSQL, SQLAlchemy (ORM)  
@@ -67,7 +67,7 @@ Implements a dedicated background "Sweeper" process to detect orphaned or crashe
 
 ---
 
-## 🚀 Local Setup & Installation
+## Local Setup & Installation
 
 ### 1. Prerequisites
 Ensure you have Python 3.11+ installed. You will also need local instances of PostgreSQL and Redis running.
