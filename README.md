@@ -2,7 +2,7 @@
 
 A decoupled, highly available, and fault-tolerant distributed system built to handle asynchronous background processing. This project demonstrates core system design principles, including message brokering, concurrent worker nodes, and automated failure recovery.
 
-## 🏗 System Architecture
+## System Architecture
 
 The system is broken down into three decoupled layers: a web ingestion layer, a fast in-memory queue, and a horizontally scalable processing layer. 
 
