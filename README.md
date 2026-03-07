@@ -24,28 +24,25 @@ graph TD
         Sweeper[Fault Tolerance Sweeper<br/>sweeper.py]
     end
 
-    %% API Flow
     Client -- "1. POST /tasks" --> API
     API -- "2. Save task (PENDING)" --> DB
     API -- "3. Push Task ID & Priority" --> Redis
 
-    %% Worker Flow
     Worker -- "4. Fetch highest priority task (zpopmin)" --> Redis
     Worker -- "5. Update status to RUNNING & Add Timestamp" --> DB
     Worker -- "6. Execute Work & Update to COMPLETED" --> DB
 
-    %% Fault Tolerance Flow
     Sweeper -. "A. Scan for RUNNING tasks > 60s" .-> DB
     Sweeper -. "B. Reset status to PENDING" .-> DB
     Sweeper -. "C. Requeue Task ID" .-> Redis
     
-    classDef primary fill:#2b3a42,stroke:#3f51b5,stroke-width:2px,color:#fff;
-    classDef secondary fill:#1e1e1e,stroke:#4caf50,stroke-width:2px,color:#fff;
-    classDef danger fill:#4a148c,stroke:#9c27b0,stroke-width:2px,color:#fff;
+    classDef web fill:#b3e5fc,stroke:#01579b,stroke-width:2px,color:#000;
+    classDef data fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:#000;
+    classDef processing fill:#e1bee7,stroke:#4a148c,stroke-width:2px,color:#000;
     
-    class API primary;
-    class DB,Redis secondary;
-    class Worker,Sweeper danger;
+    class API web;
+    class DB,Redis data;
+    class Worker,Sweeper processing;
 ```
 
 ## ✨ Key Engineering Features
