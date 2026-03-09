@@ -85,7 +85,7 @@ docker compose up --build
 This starts **5 containers**: PostgreSQL, Redis, the API server, a background Worker, and the fault-tolerance Sweeper.
 
 ### Test it
-Open the Swagger UI at 👉 **http://localhost:8000/docs**
+Open the Swagger UI at **http://localhost:8000/docs**
 
 **Submit a task:**
 ```bash
@@ -154,4 +154,4 @@ python3 sweeper.py
 
 Once the system is running, navigate to the auto-generated Swagger UI documentation to submit tasks and monitor the queue:
 
-👉 http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/docs
