@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -9,8 +10,9 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Distributed Task Scheduler API")
 
-# connect to the local Redis server 
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+# connect to Redis (defaults to localhost for local development)
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+redis_client = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 
 class TaskRequest(BaseModel):
     priority: int

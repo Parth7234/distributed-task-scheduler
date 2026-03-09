@@ -1,8 +1,9 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 #define the connection URL
-SQLALCHEMY_DATABASE_URL = "postgresql://localhost/task_scheduler"
+SQLALCHEMY_DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://localhost/task_scheduler")
 
 #create the SQLAlchemy engine
 engine = create_engine(SQLALCHEMY_DATABASE_URL)

@@ -63,11 +63,52 @@ Implements a dedicated background "Sweeper" process to detect orphaned or crashe
 - **Web Framework:** FastAPI, Uvicorn  
 - **Database / Persistence:** PostgreSQL, SQLAlchemy (ORM)  
 - **Message Broker:** Redis  
+- **Containerization:** Docker, Docker Compose  
 - **Language:** Python 3.11+
 
 ---
 
-## Local Setup & Installation
+## Quick Start (Docker)
+
+Run the entire distributed system with a single command — no manual setup required.
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### Launch
+```bash
+git clone https://github.com/Parth7234/distributed-task-scheduler.git
+cd distributed-task-scheduler
+docker compose up --build
+```
+
+This starts **5 containers**: PostgreSQL, Redis, the API server, a background Worker, and the fault-tolerance Sweeper.
+
+### Test it
+Open the Swagger UI at 👉 **http://localhost:8000/docs**
+
+**Submit a task:**
+```bash
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"priority": 1, "description": "Process payment"}'
+```
+
+**Check the queue:**
+```bash
+curl http://localhost:8000/tasks
+```
+
+The worker will automatically pick up the task and mark it as `COMPLETED` within seconds.
+
+### Stop
+```bash
+docker compose down
+```
+
+---
+
+## Manual Setup (Without Docker)
 
 ### 1. Prerequisites
 Ensure you have Python 3.11+ installed. You will also need local instances of PostgreSQL and Redis running.

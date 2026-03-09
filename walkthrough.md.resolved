@@ -1,0 +1,145 @@
+# Testing Your Distributed Task Scheduler (Docker)
+
+A step-by-step guide to test all 3 components — **API**, **Worker**, and **Sweeper**.
+
+---
+
+## Step 0 — Start Everything
+
+```bash
+cd distributed-task-scheduler
+docker compose up --build -d
+```
+
+The `-d` flag runs everything in the background so your terminal stays free. You can always check logs with `docker compose logs -f`.
+
+---
+
+## Step 1 — Post Tasks via the API
+
+Submit a few tasks with different priorities (lower number = higher priority):
+
+```bash
+# High priority
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"priority": 1, "description": "Process payment"}'
+
+# Medium priority
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"priority": 5, "description": "Send welcome email"}'
+
+# Low priority
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"priority": 10, "description": "Generate monthly report"}'
+```
+
+Each response will confirm the task was created with status `PENDING`.
+
+---
+
+## Step 2 — Watch the Worker Execute Tasks
+
+Open the worker logs to see it pick up tasks in priority order:
+
+```bash
+docker compose logs -f worker
+```
+
+You'll see output like:
+```
+[Worker] Grabbed Task ID: 1 (Priority: 1.0)
+[Worker] Executing: 'Process payment'...
+[Worker] Successfully finished Task ID: 1
+[Worker] Grabbed Task ID: 2 (Priority: 5.0)
+...
+```
+
+The worker processes one task every **5 seconds** (simulated heavy work). Lower priority numbers are picked up first.
+
+---
+
+## Step 3 — Check Task Status via API
+
+```bash
+curl http://localhost:8000/tasks
+```
+
+You'll see all tasks with their current status:
+- `PENDING` → waiting in queue
+- `RUNNING` → worker is currently executing it
+- `COMPLETED` → done
+
+> [!TIP]
+> You can also use the Swagger UI at **http://localhost:8000/docs** — it's a visual way to submit and view tasks without using `curl`.
+
+---
+
+## Step 4 — Test the Sweeper (Crash Recovery) 🔥
+
+This is the most interesting part. The **Sweeper** automatically detects tasks that have been `RUNNING` for more than 60 seconds (meaning the worker probably crashed) and requeues them.
+
+### How to simulate a crash:
+
+**1. Submit a new task:**
+```bash
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"priority": 1, "description": "Crash test task"}'
+```
+
+**2. Watch the worker log until it says `Executing: 'Crash test task'...`:**
+```bash
+docker compose logs -f worker
+```
+
+**3. Immediately kill the worker container (simulating a crash):**
+```bash
+docker compose kill worker
+```
+
+This kills the worker mid-execution. The task is stuck as `RUNNING` in the database — it will never finish on its own.
+
+**4. Verify the task is stuck:**
+```bash
+curl http://localhost:8000/tasks
+```
+You'll see the crash test task with `"status": "RUNNING"` — it's a ghost task now.
+
+**5. Watch the sweeper rescue it — check sweeper logs:**
+```bash
+docker compose logs -f sweeper
+```
+
+After **~60 seconds**, the sweeper will detect the ghost task and print:
+```
+[Sweeper] Found crashed Task ID: X. Requeuing...
+[Sweeper] Successfully rescued tasks.
+```
+
+**6. Restart the worker to process the rescued task:**
+```bash
+docker compose start worker
+```
+
+**7. Verify the task completed:**
+```bash
+curl http://localhost:8000/tasks
+```
+The crash test task should now show `"status": "COMPLETED"` 🎉
+
+---
+
+## Useful Docker Commands
+
+| Command | What it does |
+|---|---|
+| `docker compose up --build -d` | Start everything in background |
+| `docker compose down` | Stop and remove all containers |
+| `docker compose ps` | See which containers are running |
+| `docker compose logs -f` | Follow all logs live |
+| `docker compose logs -f worker` | Follow only the worker's logs |
+| `docker compose kill worker` | Force-kill the worker (simulate crash) |
+| `docker compose start worker` | Restart a stopped service |

@@ -1,11 +1,17 @@
+import os
 import time
 import datetime
 import redis
+import database
 from database import SessionLocal
 import models
 
-# connect to Redis
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+# ensure the tasks table exists (in case sweeper starts before the API)
+models.Base.metadata.create_all(bind=database.engine)
+
+# connect to Redis (defaults to localhost for local dev)
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+redis_client = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 
 TIMEOUT_SECONDS = 60 
 
