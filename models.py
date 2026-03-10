@@ -10,3 +10,4 @@ class Task(Base):
     description = Column(String)
     status = Column(String, default="PENDING")
     started_at = Column(DateTime, nullable=True)# nullable=True when the task is just PENDING
+    result = Column(String, nullable=True)

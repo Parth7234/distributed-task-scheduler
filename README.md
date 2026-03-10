@@ -1,6 +1,6 @@
 # Distributed Task Scheduler
 
-A decoupled, highly available, and fault-tolerant distributed system built to handle asynchronous background processing. This project demonstrates core system design principles, including message brokering, concurrent worker nodes, and automated failure recovery.
+A decoupled, highly available, and fault-tolerant distributed system built to handle asynchronous background processing. The worker downloads images from URLs and generates compressed 128x128 JPEG thumbnails, demonstrating real task execution alongside core system design principles like message brokering, concurrent worker nodes, and automated failure recovery.
 
 ## System Architecture
 
@@ -30,7 +30,7 @@ graph TD
 
     Worker -- "4. Fetch highest priority task (zpopmin)" --> Redis
     Worker -- "5. Update status to RUNNING & Add Timestamp" --> DB
-    Worker -- "6. Execute Work & Update to COMPLETED" --> DB
+    Worker -- "6. Download Image, Generate Thumbnail & Update to COMPLETED" --> DB
 
     Sweeper -. "A. Scan for RUNNING tasks > 60s" .-> DB
     Sweeper -. "B. Reset status to PENDING" .-> DB
@@ -47,6 +47,9 @@ graph TD
 
 ## Key Features
 
+**Real Task Execution (Image Compression):**  
+The worker downloads images from URLs, resizes them to 128x128 thumbnails using Pillow, and saves compressed JPEGs to disk — demonstrating actual I/O-bound distributed work, not simulated delays.
+
 **Asynchronous Processing:**  
 Offloads heavy computational tasks from the main API thread to isolated background workers, ensuring immediate HTTP response times.
 
@@ -56,6 +59,9 @@ Utilizes Redis atomic operations (`zpopmin`) to safely distribute prioritized ta
 **Self-Healing Fault Tolerance:**  
 Implements a dedicated background "Sweeper" process to detect orphaned or crashed tasks (Ghost Tasks) and automatically requeue them, ensuring 100% task completion.
 
+**Error Handling:**  
+Failed tasks are marked with a `FAILED` status and the error message is stored in the `result` field for debugging, instead of silently disappearing.
+
 ---
 
 ## Tech Stack
@@ -63,6 +69,7 @@ Implements a dedicated background "Sweeper" process to detect orphaned or crashe
 - **Web Framework:** FastAPI, Uvicorn  
 - **Database / Persistence:** PostgreSQL, SQLAlchemy (ORM)  
 - **Message Broker:** Redis  
+- **Image Processing:** Pillow (PIL)  
 - **Containerization:** Docker, Docker Compose  
 - **Language:** Python 3.11+
 
@@ -87,11 +94,11 @@ This starts **5 containers**: PostgreSQL, Redis, the API server, a background Wo
 ### Test it
 Open the Swagger UI at **http://localhost:8000/docs**
 
-**Submit a task:**
+**Submit an image compression task:**
 ```bash
 curl -X POST http://localhost:8000/tasks \
   -H "Content-Type: application/json" \
-  -d '{"priority": 1, "description": "Process payment"}'
+  -d '{"priority": 1, "description": "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d"}'
 ```
 
 **Check the queue:**
@@ -99,7 +106,12 @@ curl -X POST http://localhost:8000/tasks \
 curl http://localhost:8000/tasks
 ```
 
-The worker will automatically pick up the task and mark it as `COMPLETED` within seconds.
+The worker will automatically download the image, generate a 128x128 thumbnail, and mark the task as `COMPLETED`.
+
+**View generated thumbnails:**
+```bash
+docker compose exec worker ls /app/thumbnails/
+```
 
 ### Stop
 ```bash
